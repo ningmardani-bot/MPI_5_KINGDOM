@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPI Klasifikasi 5 Kingdom - Gorontalo</title>
+    <style>
+        :root {
+            --peach-light: #ffedd5;
+            --peach-main: #fb923c;
+            --peach-dark: #ea580c;
+            --rose-light: #ffe4e6;
+            --rose-main: #fb7185;
+            --rose-dark: #e11d48;
+            --bg-color: #fffaf5;
+            --text-main: #431407;
+            --text-light: #7c2d12;
+            --white: #ffffff;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #e2e8f0;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #app-container {
+            background-color: var(--bg-color);
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--peach-main), var(--peach-dark));
+            color: var(--white);
+            padding: 20px;
+            text-align: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: var(--card-shadow);
+            z-index: 10;
+        }
+
+        header h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 5px; }
+        header p { font-size: 0.85rem; opacity: 0.9; }
+
+        #main-content {
+            flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; scroll-behavior: smooth;
+        }
+
+        .card {
+            background: var(--white); border-radius: 16px; padding: 20px; margin-bottom: 15px;
+            box-shadow: var(--card-shadow); transition: all 0.3s ease; border: 2px solid transparent;
+        }
+        .card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); }
+
+        h2 { color: var(--peach-dark); font-size: 1.2rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        p { line-height: 1.6; margin-bottom: 10px; font-size: 0.95rem; }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; width: 100%;
+            padding: 14px 20px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s ease; text-align: center; margin-bottom: 10px;
+        }
+        .btn-peach { background-color: var(--peach-main); color: white; }
+        .btn-peach:active { background-color: var(--peach-dark); transform: scale(0.98); }
+        .btn-rose { background-color: var(--rose-main); color: white; }
+        .btn-rose:active { background-color: var(--rose-dark); transform: scale(0.98); }
+        .btn-outline { background-color: transparent; color: var(--peach-main); border: 2px solid var(--peach-main); }
+        .btn-outline:active { background-color: var(--peach-light); }
+        
+        .input-field {
+            width: 100%; padding: 12px 15px; margin-bottom: 15px; border-radius: 10px;
+            border: 2px solid var(--peach-light); font-size: 1rem; outline: none; transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: var(--peach-main); }
+
+        #bottom-nav {
+            position: absolute; bottom: 0; left: 0; width: 100%; background: var(--white);
+            display: flex; justify-content: space-around; padding: 10px 0;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05); border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 10;
+        }
+
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; background: none; border: none;
+            color: var(--text-light); font-size: 0.75rem; cursor: pointer; flex: 1; padding: 5px; transition: color 0.3s ease;
+        }
+        .nav-item .icon { font-size: 1.5rem; margin-bottom: 4px; }
+        .nav-item.active { color: var(--rose-main); font-weight: bold; }
+        .nav-item.active .icon { transform: scale(1.1); }
+
+        .page { display: none; animation: fadeIn 0.4s ease forwards; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; }
+        .badge-rose { background: var(--rose-light); color: var(--rose-dark); }
+        .badge-peach { background: var(--peach-light); color: var(--peach-dark); }
+
+        .interactive-board { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .organism-item {
+            background: var(--white); border: 2px dashed var(--text-light); border-radius: 12px;
+            padding: 15px 10px; text-align: center; cursor: pointer; transition: all 0.2s ease;
+        }
+        .organism-item.selected { border-color: var(--rose-main); background: var(--rose-light); transform: scale(1.05); }
+        .organism-item.matched { opacity: 0.5; pointer-events: none; border: 2px solid var(--peach-main); background: var(--peach-light); }
+        .organism-item .icon-big { font-size: 2.5rem; margin-bottom: 5px; }
+
+        .kingdom-target {
+            background: var(--peach-main); color: white; border-radius: 12px; padding: 15px; text-align: center; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .kingdom-target:active { background: var(--peach-dark); transform: scale(0.95); }
+
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 50; backdrop-filter: blur(2px);
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal-icon { font-size: 3rem; margin-bottom: 10px; }
+
+        .quiz-option {
+            background: var(--white); border: 2px solid var(--peach-light); border-radius: 12px; padding: 15px; margin-bottom: 10px; text-align: left; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; width: 100%;
+        }
+        .quiz-option:hover { border-color: var(--peach-main); background: var(--peach-light); }
+        .quiz-option.correct { border-color: var(--peach-main); background: var(--peach-main); color: white; }
+        .quiz-option.wrong { border-color: var(--rose-main); background: var(--rose-main); color: white; }
+        
+        .quiz-feedback { margin-top: 15px; padding: 15px; border-radius: 12px; display: none; font-size: 0.9rem;}
+        .quiz-feedback.show { display: block; animation: fadeIn 0.3s; }
+        .feedback-correct { background: var(--peach-light); color: var(--peach-dark); border-left: 4px solid var(--peach-main); }
+        .feedback-wrong { background: var(--rose-light); color: var(--rose-dark); border-left: 4px solid var(--rose-main); }
+
+        .loading-spinner {
+            display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(251, 146, 60, 0.3); border-radius: 50%; border-top-color: var(--peach-main); animation: spin 1s ease-in-out infinite; margin-top: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <header>
+            <h1>IPA Kelas VII - Fase D</h1>
+            <p>Sistem Klasifikasi 5 Kingdom</p>
+        </header>
+
+        <div id="main-content">
+            
+            <div id="page-home" class="page active">
+                <div class="card" style="text-align: center; padding: 15px;">
+                    <h3 style="font-size: 1rem; color: var(--text-light); margin-bottom: 15px; font-weight: 600;">👨‍💻 Profil Pengembang</h3>
+                    <a href="https://freeimage.host/i/n0Tr0bI" target="_blank">
+                        <img src="https://iili.io/n0Tr0bI.md.jpg" alt="Profil Pengembang" style="max-width: 100%; height: auto; border-radius: 12px; margin: 0 auto; display: block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    </a>
+                </div>
+
+                <div class="card" style="text-align: center; padding: 30px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 10px;">🔬</div>
+                    <h2 style="justify-content: center; font-size: 1.5rem;">Selamat Datang!</h2>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">
+                        Mari menjelajah keanekaragaman hayati yang ada di sekitar kita, dari perairan laut Botubarani hingga ladang jagung di Gorontalo.
+                    </p>
+                    <button class="btn btn-peach" onclick="navTo('materi')">Mulai Belajar 🚀</button>
+                </div>
+                
+                <div class="card">
+                    <h2>🎯 Tujuan Pembelajaran</h2>
+                    <p>Setelah menggunakan modul ini, kamu diharapkan dapat mengelompokkan makhluk hidup ke dalam 5 Kingdom dan memberikan contoh yang ada di sekitarmu.</p>
+                </div>
+            </div>
+
+            <div id="page-materi" class="page">
+                <div style="margin-bottom: 20px;">
+                    <p style="text-align: center; color: var(--text-light);">Pelajari 5 kelompok besar makhluk hidup (Klasifikasi Whittaker).</p>
+                </div>
+
+                <div class="card">
+                    <span class="badge badge-rose">1. Kingdom Monera</span>
+                    <h2>🦠 Bakteri & Alga Biru</h2>
+                    <p><strong>Ciri:</strong> Uniseluler (satu sel), Prokariotik (tidak punya membran inti sel).</p>
+                    <p><strong>Contoh Lokal:</strong> Bakteri pengikat nitrogen (<i>Rhizobium</i>) yang menyuburkan tanah di ladang jagung Gorontalo.</p>
+                </div>
+
+                <div class="card">
+                    <span class="badge badge-peach">2. Kingdom Protista</span>
+                    <h2>🌿 Mirip Tumbuhan / Hewan</h2>
+                    <p><strong>Ciri:</strong> Eukariotik (punya membran inti), ada yang satu sel/banyak sel, belum memiliki organ sejati.</p>
+                    <p><strong>Contoh Lokal:</strong> Rumput Laut (Alga) yang banyak dibudidayakan nelayan di pesisir utara Gorontalo.</p>
+                </div>
+
+                <div class="card">
+                    <span class="badge badge-rose">3. Kingdom Fungi</span>
+                    <h2>🍄 Kelompok Jamur</h2>
+                    <p><strong>Ciri:</strong> Eukariotik, tidak memiliki klorofil (heterotrof/tidak bisa berfotosintesis), berkembang biak dengan spora.</p>
+                    <p><strong>Contoh Lokal:</strong> Jamur yang tumbuh di tumpukan tongkol jagung sisa panen.</p>
+                </div>
+
+                <div class="card">
+                    <span class="badge badge-peach">4. Kingdom Plantae</span>
+                    <h2>🌽 Kelompok Tumbuhan</h2>
+                    <p><strong>Ciri:</strong> Multiseluler, Eukariotik, berdinding sel, autotrof (mampu berfotosintesis).</p>
+                    <p><strong>Contoh Lokal:</strong> Tanaman Jagung (maskot pertanian Gorontalo) dan Pohon Kelapa.</p>
+                </div>
+
+                <div class="card">
+                    <span class="badge badge-rose">5. Kingdom Animalia</span>
+                    <h2>🐋 Kelompok Hewan</h2>
+                    <p><strong>Ciri:</strong> Multiseluler, Eukariotik, tidak berdinding sel, heterotrof, bisa bergerak aktif.</p>
+                    <p><strong>Contoh Lokal:</strong> Hiu Paus di perairan Botubarani, Burung Maleo.</p>
+                </div>
+            </div>
+
+            <div id="page-eksplorasi" class="page">
+                <div class="card">
+                    <h2>🎮 Misi Klasifikasi</h2>
+                    <p><strong>Cara Main:</strong> Tap (klik) pada makhluk hidup di bawah, lalu tap pada nama Kingdom yang tepat untuk memasukkannya!</p>
+                </div>
+                <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px;" id="organism-list"></div>
+                <div class="interactive-board">
+                    <div class="kingdom-target" onclick="matchKingdom('Monera')">🦠 Monera</div>
+                    <div class="kingdom-target" onclick="matchKingdom('Protista')">🌿 Protista</div>
+                    <div class="kingdom-target" onclick="matchKingdom('Fungi')">🍄 Fungi</div>
+                    <div class="kingdom-target" onclick="matchKingdom('Plantae')">🌽 Plantae</div>
+                    <div class="kingdom-target" style="grid-column: span 2;" onclick="matchKingdom('Animalia')">🐋 Animalia</div>
+                </div>
+            </div>
+
+            <div id="page-kuis" class="page">
+                <!-- Form Login Siswa Baru -->
+                <div id="quiz-login" class="card" style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">📝</div>
+                    <h2>Identitas Siswa</h2>
+                    <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-light);">Isi data diri Anda sebelum memulai evaluasi kuis.</p>
+                    
+                    <input type="text" id="input-nama" class="input-field" placeholder="Nama Lengkap" required autocomplete="off">
+                    <input type="text" id="input-kelas" class="input-field" placeholder="Kelas (Misal: VII-A)" required autocomplete="off">
+                    
+                    <button class="btn btn-peach" onclick="startQuiz()">Mulai Kuis 🚀</button>
+                    
+                    <div id="quiz-loading" style="display: none; margin-top: 15px;">
+                        <div class="loading-spinner"></div>
+                        <p style="color: var(--peach-main); font-size: 0.85rem; margin-top: 5px;">Menghubungkan ke Server...</p>
+                    </div>
+                </div>
+
+                <!-- Kontainer Kuis -->
+                <div id="quiz-container" style="display: none;">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <span class="badge badge-rose" id="quiz-progress">Soal 1/5</span>
+                            <span class="badge badge-peach" id="quiz-score">Skor: 0</span>
+                        </div>
+                        <h3 id="quiz-question" style="margin-bottom: 20px; line-height: 1.5; font-size: 1.1rem;">Pertanyaan...</h3>
+                        <div id="quiz-options"></div>
+                        <div id="quiz-feedback-box" class="quiz-feedback"></div>
+                        <button id="btn-next-quiz" class="btn btn-peach" style="display: none; margin-top: 15px;" onclick="nextQuestion()">Selanjutnya ➡️</button>
+                    </div>
+                </div>
+
+                <!-- Hasil Akhir Kuis -->
+                <div id="quiz-result" class="card" style="display: none; text-align: center;">
+                    <div class="icon-big" style="font-size: 4rem;">🏆</div>
+                    <h2>Kuis Selesai!</h2>
+                    <p style="font-size: 1.2rem;">Skor Akhir Kamu:</p>
+                    <h1 id="final-score" style="font-size: 3rem; color: var(--rose-main); margin: 10px 0;">0</h1>
+                    <p id="final-message" style="margin-bottom: 20px; font-weight: bold;"></p>
+                    
+                    <div id="save-status-container" style="display: none; margin-bottom: 15px;">
+                        <div class="loading-spinner" id="save-spinner"></div>
+                        <p id="save-status-text" style="color: var(--peach-main); font-size: 0.9rem; margin-top: 5px;">Menyimpan hasil ke database guru...</p>
+                    </div>
+
+                    <button class="btn btn-outline" id="btn-restart" style="display: none;" onclick="navTo('home')">Kembali ke Beranda 🏠</button>
+                </div>
+            </div>
+
+        </div>
+
+        <nav id="bottom-nav">
+            <button class="nav-item active" id="nav-home" onclick="navTo('home')"><span class="icon">🏠</span><span>Beranda</span></button>
+            <button class="nav-item" id="nav-materi" onclick="navTo('materi')"><span class="icon">📖</span><span>Materi</span></button>
+            <button class="nav-item" id="nav-eksplorasi" onclick="navTo('eksplorasi')"><span class="icon">🎮</span><span>Eksplorasi</span></button>
+            <button class="nav-item" id="nav-kuis" onclick="navTo('kuis')"><span class="icon">📝</span><span>Kuis</span></button>
+        </nav>
+
+        <div class="modal-overlay" id="modal-feedback">
+            <div class="modal-content">
+                <div class="modal-icon" id="modal-icon">✅</div>
+                <h2 id="modal-title" style="justify-content: center;">Tepat Sekali!</h2>
+                <p id="modal-desc">Penjelasan akan muncul di sini.</p>
+                <button class="btn btn-rose" onclick="closeModal()">Tutup</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // URL WEB APP GOOGLE APPS SCRIPT ANDA
+        // ==========================================
+        const GAS_URL = ""; // GANTI INI DENGAN URL WEB APP MILIK ANDA DARI LANGKAH 1
+        
+        // --- Navigation Logic ---
+        function navTo(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            document.getElementById('nav-' + pageId).classList.add('active');
+            document.getElementById('main-content').scrollTop = 0;
+
+            // Reset quiz view when leaving quiz page
+            if(pageId !== 'kuis' && !studentName) {
+                resetQuizView();
+            }
+        }
+
+        // --- Eksplorasi Logic ---
+        const organisms = [
+            { id: 1, name: "Hiu Paus", icon: "🐋", kingdom: "Animalia", desc: "Hiu Paus (Botubarani) adalah hewan (multiseluler, heterotrof, bergerak bebas)." },
+            { id: 2, name: "Tanaman Jagung", icon: "🌽", kingdom: "Plantae", desc: "Jagung memiliki klorofil untuk fotosintesis (autotrof)." },
+            { id: 3, name: "Rumput Laut", icon: "🌿", kingdom: "Protista", desc: "Rumput laut di pesisir adalah alga makroskopis, masuk kelompok Protista Mirip Tumbuhan." },
+            { id: 4, name: "Jamur Kayu", icon: "🍄", kingdom: "Fungi", desc: "Jamur mengurai sisa makhluk hidup, tidak punya klorofil." },
+            { id: 5, name: "Bakteri Tanah", icon: "🦠", kingdom: "Monera", desc: "Bakteri bersifat prokariotik (tanpa membran inti)." }
+        ];
+
+        let selectedOrganism = null;
+        let matchedCount = 0;
+
+        function initEksplorasi() {
+            const list = document.getElementById('organism-list');
+            list.innerHTML = '';
+            matchedCount = 0;
+            let shuffled = [...organisms].sort(() => Math.random() - 0.5);
+            shuffled.forEach(org => {
+                const el = document.createElement('div');
+                el.className = 'organism-item';
+                el.id = `org-${org.id}`;
+                el.innerHTML = `<div class="icon-big">${org.icon}</div><div style="font-size: 0.8rem; font-weight:bold;">${org.name}</div>`;
+                el.onclick = () => selectOrganism(org, el);
+                list.appendChild(el);
+            });
+        }
+
+        function selectOrganism(org, el) {
+            document.querySelectorAll('.organism-item').forEach(item => item.classList.remove('selected'));
+            selectedOrganism = org;
+            el.classList.add('selected');
+        }
+
+        function matchKingdom(targetKingdom) {
+            if (!selectedOrganism) {
+                showModal("Pilih Dulu!", "Tap salah satu makhluk hidup di bagian atas terlebih dahulu.", "⚠️", "btn-rose");
+                return;
+            }
+            if (selectedOrganism.kingdom === targetKingdom) {
+                showModal("Benar!", selectedOrganism.desc, "🎉", "btn-peach");
+                document.getElementById(`org-${selectedOrganism.id}`).classList.add('matched', 'selected');
+                selectedOrganism = null;
+                matchedCount++;
+                if (matchedCount === organisms.length) {
+                    setTimeout(() => showModal("Misi Selesai! 🏆", "Kamu berhasil mengklasifikasikan semua dengan tepat.", "🌟", "btn-peach"), 1000);
+                }
+            } else {
+                showModal("Kurang Tepat", `${selectedOrganism.name} BUKAN bagian dari ${targetKingdom}. Coba lagi!`, "🤔", "btn-rose");
+            }
+        }
+
+        function showModal(title, desc, icon, btnClass) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('modal-icon').innerText = icon;
+            document.querySelector('#modal-feedback .btn').className = `btn ${btnClass}`;
+            document.getElementById('modal-feedback').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-feedback').classList.remove('active');
+        }
+
+        const defaultQuizData = [
+            {
+                question: "Saat bermain di pesisir pantai utara Gorontalo, Budi menemukan organisme menempel pada batu karang, bentuknya mirip tumbuhan merah/hijau, dan sering diolah warga menjadi agar-agar. Organisme ini diklasifikasikan ke dalam kingdom...",
+                options: ["Plantae", "Fungi", "Protista", "Monera"], answer: 2,
+                explanation: "Rumput laut (Alga) tergolong kingdom Protista karena tubuhnya belum memiliki akar, batang, dan daun sejati (Thallophyta)."
+            },
+            {
+                question: "Gorontalo terkenal dengan sebutan Provinsi Jagung. Tanaman jagung memiliki akar, batang, daun sejati, dan mampu memproduksi makanannya sendiri melalui fotosintesis. Jagung termasuk kingdom...",
+                options: ["Plantae", "Fungi", "Protista", "Animalia"], answer: 0,
+                explanation: "Jagung memiliki organ sejati dan sel-sel yang memiliki kloroplas untuk fotosintesis (autotrof)."
+            },
+            {
+                question: "Petani jagung melihat organisme berbentuk payung di atas sisa bonggol jagung membusuk. Organisme ini tidak berwarna hijau. Termasuk kingdom...",
+                options: ["Plantae", "Monera", "Fungi", "Protista"], answer: 2,
+                explanation: "Jamur (Fungi) tidak memiliki klorofil (heterotrof) dan bertahan hidup dengan menguraikan sisa-sisa makhluk hidup (saprofit)."
+            }
+        ]; // Fallback jika tidak ada internet/GAS gagal.
+
+        let activeQuizData = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+        
+        // Data Siswa
+        let studentName = "";
+        let studentClass = "";
+        let studentAnswersList = [];
+        let correctCount = 0;
+        let wrongCount = 0;
+
+        function resetQuizView() {
+            document.getElementById('quiz-login').style.display = 'block';
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('quiz-result').style.display = 'none';
+            document.getElementById('input-nama').value = '';
+            document.getElementById('input-kelas').value = '';
+            studentName = ""; studentClass = "";
+        }
+
+        async function startQuiz() {
+            const nama = document.getElementById('input-nama').value.trim();
+            const kls = document.getElementById('input-kelas').value.trim();
+
+            if (!nama || !kls) {
+                showModal("Perhatian", "Mohon isi Nama Lengkap dan Kelas Anda terlebih dahulu.", "⚠️", "btn-rose");
+                return;
+            }
+
+            studentName = nama;
+            studentClass = kls;
+            studentAnswersList = [];
+            correctCount = 0;
+            wrongCount = 0;
+            score = 0;
+            currentQuestion = 0;
+
+            const loadingEl = document.getElementById('quiz-loading');
+            
+            // Fetch dari GAS (Google Sheets)
+            if (GAS_URL !== "") {
+                loadingEl.style.display = 'block';
+                try {
+                    const response = await fetch(GAS_URL);
+                    const result = await response.json();
+                    if (result.status === 'success' && result.data.length > 0) {
+                        activeQuizData = result.data;
+                    } else {
+                        activeQuizData = defaultQuizData; // Fallback
+                    }
+                } catch (e) {
+                    console.error("Gagal load data, pakai default.", e);
+                    activeQuizData = defaultQuizData; // Fallback kalau offline
+                }
+                loadingEl.style.display = 'none';
+            } else {
+                activeQuizData = defaultQuizData;
+            }
+
+            document.getElementById('quiz-login').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            const q = activeQuizData[currentQuestion];
+            document.getElementById('quiz-progress').innerText = `Soal ${currentQuestion + 1}/${activeQuizData.length}`;
+            document.getElementById('quiz-score').innerText = `Skor: ${Math.round(score)}`;
+            document.getElementById('quiz-question').innerText = q.question;
+            
+            const optionsDiv = document.getElementById('quiz-options');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-option';
+                btn.innerText = `${String.fromCharCode(65 + index)}. ${opt}`;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsDiv.appendChild(btn);
+            });
+
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            feedbackBox.className = 'quiz-feedback';
+            feedbackBox.innerHTML = '';
+            document.getElementById('btn-next-quiz').style.display = 'none';
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (answered) return;
+            answered = true;
+
+            const q = activeQuizData[currentQuestion];
+            const options = document.querySelectorAll('.quiz-option');
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            
+            // Simpan jawaban riwayat
+            const jawabanTeks = `${String.fromCharCode(65 + selectedIndex)}. ${q.options[selectedIndex]}`;
+            studentAnswersList.push(jawabanTeks);
+
+            const poinPerSoal = 100 / activeQuizData.length;
+
+            if (selectedIndex === q.answer) {
+                btnElement.classList.add('correct');
+                score += poinPerSoal;
+                correctCount++;
+                feedbackBox.classList.add('feedback-correct', 'show');
+                feedbackBox.innerHTML = `<strong>Benar!</strong> ${q.explanation}`;
+            } else {
+                btnElement.classList.add('wrong');
+                options[q.answer].classList.add('correct'); // Tunjukkan yang benar
+                wrongCount++;
+                feedbackBox.classList.add('feedback-wrong', 'show');
+                feedbackBox.innerHTML = `<strong>Kurang Tepat.</strong> ${q.explanation}`;
+            }
+
+            document.getElementById('quiz-score').innerText = `Skor: ${Math.round(score)}`;
+            document.getElementById('btn-next-quiz').style.display = 'inline-flex';
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < activeQuizData.length) {
+                loadQuestion();
+            } else {
+                processAndSaveQuiz();
+            }
+        }
+
+        async function processAndSaveQuiz() {
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('quiz-result').style.display = 'block';
+            
+            const finalScore = Math.round(score);
+            document.getElementById('final-score').innerText = finalScore;
+            
+            const msg = document.getElementById('final-message');
+            if (finalScore >= 80) msg.innerText = "Luar biasa! Kamu sangat memahami materi ini.";
+            else if (finalScore >= 60) msg.innerText = "Bagus! Terus tingkatkan belajarmu.";
+            else msg.innerText = "Jangan menyerah! Ayo baca kembali materi dan coba lagi.";
+
+            document.getElementById('btn-restart').style.display = 'none';
+
+            // Proses Pengiriman ke GAS Database
+            if (GAS_URL !== "") {
+                document.getElementById('save-status-container').style.display = 'block';
+                document.getElementById('save-spinner').style.display = 'inline-block';
+                document.getElementById('save-status-text').innerText = "Menyimpan hasil ke database guru...";
+                document.getElementById('save-status-text').style.color = "var(--peach-main)";
+
+                const payload = {
+                    nama: studentName,
+                    kelas: studentClass,
+                    skor: finalScore,
+                    benar: correctCount,
+                    salah: wrongCount,
+                    jawaban: studentAnswersList
+                };
+
+                try {
+                    await fetch(GAS_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain hindari masalah CORS
+                    });
+                    
+                    // Sukses
+                    document.getElementById('save-spinner').style.display = 'none';
+                    document.getElementById('save-status-text').innerText = "✅ Hasil berhasil tersimpan di database guru!";
+                    document.getElementById('save-status-text').style.color = "#10b981"; // green
+                } catch (e) {
+                    console.error("Gagal simpan", e);
+                    document.getElementById('save-spinner').style.display = 'none';
+                    document.getElementById('save-status-text').innerText = "⚠️ Gagal terhubung ke database. (Data belum tersimpan)";
+                    document.getElementById('save-status-text').style.color = "var(--rose-main)";
+                }
+            }
+            
+            document.getElementById('btn-restart').style.display = 'inline-flex';
+        }
+
+        window.onload = function() {
+            initEksplorasi();
+        }
+    </script>
+</body>
+</html>
